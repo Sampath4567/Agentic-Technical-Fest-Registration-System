@@ -12,3 +12,6 @@ sqlalchemy
 python-dotenv
 requests
 python-multipart
+langchain_community
+
+# uvicorn main:app --reload
