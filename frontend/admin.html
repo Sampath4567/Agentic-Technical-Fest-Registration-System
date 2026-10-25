@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">Admin Dashboard</h1>
+            <nav><a href="index.html">Public Portal</a></nav>
+        </header>
+        
+        <div class="card">
+            <h2>Registrations</h2>
+            <div style="overflow-x: auto; margin-top: 1.5rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Event</th>
+                            <th>Team</th>
+                            <th>Eligibility</th>
+                            <th>Slot</th>
+                            <th>Payment</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regTableBody">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="errorMsg" class="badge danger" style="display: none; margin-top: 1rem;"></div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Must pass admin role
+                const regs = await fetchAPI('/registrations', { headers: { 'X-Role': 'admin' } });
+                const tbody = document.getElementById('regTableBody');
+                
+                if (regs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No registrations found</td></tr>';
+                    return;
+                }
+                
+                regs.forEach(reg => {
+                    let elClass = reg.eligibility_status === 'eligible' ? 'success' : 'danger';
+                    let slotClass = reg.slot_status === 'confirmed' ? 'success' : (reg.slot_status === 'waitlisted' ? 'warning' : 'danger');
+                    let payClass = reg.payment_verified ? 'success' : 'danger';
+                    
+                    const dateStr = reg.registration_date ? new Date(reg.registration_date).toLocaleString() : 'N/A';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><a href="result.html?id=${reg.id}" style="color: var(--primary);">${reg.id.split('-')[1]}</a></td>
+                            <td>${reg.event_id}</td>
+                            <td>${reg.team_name}</td>
+                            <td><span class="badge ${elClass}">${reg.eligibility_status}</span></td>
+                            <td><span class="badge ${slotClass}">${reg.slot_status}</span></td>
+                            <td><span class="badge ${payClass}">${reg.payment_verified ? 'Yes' : 'No'}</span></td>
+                            <td style="font-size: 0.875rem; color: var(--text-muted);">${dateStr}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                const errDiv = document.getElementById('errorMsg');
+                errDiv.innerText = 'Admin access denied or error loading data. ' + error.message;
+                errDiv.style.display = 'inline-block';
+            }
+        });
+    </script>
+</body>
+</html>

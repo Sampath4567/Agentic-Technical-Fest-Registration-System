@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Result</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">Registration Result</h1>
+            <nav><a href="index.html">Back to Home</a></nav>
+        </header>
+        
+        <div id="resultContent" class="card">
+            Loading...
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const regId = params.get('id');
+            
+            try {
+                // In this demo, participant can fetch their registration just by ID
+                const reg = await fetchAPI(`/registration/${regId}`, { headers: { 'X-Role': 'participant' } });
+                
+                let elClass = reg.eligibility_status === 'eligible' ? 'success' : 'danger';
+                let slotClass = reg.slot_status === 'confirmed' ? 'success' : (reg.slot_status === 'waitlisted' ? 'warning' : 'danger');
+                let payClass = reg.payment_verified ? 'success' : 'danger';
+                
+                const aiMessage = reg.messages.length > 0 ? reg.messages[reg.messages.length-1].content : "No message generated.";
+                
+                document.getElementById('resultContent').innerHTML = `
+                    <h2>Team: ${reg.team_name}</h2>
+                    <p style="color: var(--text-muted);">Registration ID: ${reg.id}</p>
+                    
+                    <div class="grid" style="margin-top: 1.5rem;">
+                        <div style="background: #374151; padding: 1rem; border-radius: 0.5rem;">
+                            <h3>Status</h3>
+                            <p>Eligibility: <span class="badge ${elClass}">${reg.eligibility_status}</span></p>
+                            <p>Slot: <span class="badge ${slotClass}">${reg.slot_status} ${reg.waitlist_position ? `(#${reg.waitlist_position})` : ''}</span></p>
+                            <p>Payment: <span class="badge ${payClass}">${reg.payment_verified ? 'Verified' : 'Failed'}</span></p>
+                        </div>
+                        
+                        <div style="background: #374151; padding: 1rem; border-radius: 0.5rem;">
+                            <h3>Communication (AI Agent)</h3>
+                            <p style="white-space: pre-wrap; font-style: italic;">${aiMessage}</p>
+                        </div>
+                    </div>
+                    
+                    ${reg.eligibility_reasons.length > 0 ? `
+                        <div style="margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--danger); border-radius: 0.5rem;">
+                            <h3 style="color: var(--danger);">Eligibility Issues</h3>
+                            <ul>${reg.eligibility_reasons.map(r => `<li>${r}</li>`).join('')}</ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${reg.payment_issues.length > 0 ? `
+                        <div style="margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--warning); border-radius: 0.5rem;">
+                            <h3 style="color: var(--warning);">Payment Issues</h3>
+                            <ul>${reg.payment_issues.map(r => `<li>${r}</li>`).join('')}</ul>
+                        </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                document.getElementById('resultContent').innerHTML = '<p class="danger">Registration not found.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

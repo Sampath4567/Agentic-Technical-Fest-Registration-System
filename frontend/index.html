@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Fest</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">Agentic Fest 2026</h1>
+            <nav>
+                <a href="index.html">Events</a>
+                <a href="assistant.html">Ask AI</a>
+                <a href="admin.html">Admin</a>
+            </nav>
+        </header>
+        
+        <h2>Available Events</h2>
+        <div id="eventsGrid" class="grid" style="margin-top: 1.5rem;">
+            <!-- Loaded via JS -->
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const events = await fetchAPI('/events', { headers: { 'X-Role': 'participant' } });
+                const grid = document.getElementById('eventsGrid');
+                
+                events.forEach(event => {
+                    grid.innerHTML += `
+                        <div class="card">
+                            <h3>${event.name}</h3>
+                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">${event.date} | ${event.time}</p>
+                            <p>${event.description}</p>
+                            <div style="margin: 1rem 0; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <span class="badge">Team: ${event.min_team_size}-${event.max_team_size}</span>
+                                <span class="badge">Fee: ₹${event.fee}</span>
+                            </div>
+                            <a href="event-details.html?id=${event.id}" class="btn">View Details</a>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('eventsGrid').innerHTML = '<p class="danger">Failed to load events.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
